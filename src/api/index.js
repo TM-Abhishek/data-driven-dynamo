@@ -46,12 +46,37 @@ app.post('/v1/text-to-speech/:voice_id', async (req, res) => {
   }
 });
 
+// GET CALL : GET VOICE BY VOICE-ID "/v1/voices"
 app.get('/v1/voices/:voice_id', async (req, res) => {
   try {
     const { voice_id } = req.params;
     const apiKey = 'your_api_key';
 
     const response = await axios.get(`https://api.elevenlabs.io/v1/voices/${voice_id}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      }
+    });
+
+    res.json(response.data);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'An error occurred' });
+  }
+});
+
+//POST CALL : ADD VOICE "/v1/voices/add"
+app.post('/v1/voices', async (req, res) => {
+  try {
+    const { name, language, gender } = req.body;
+    const apiKey = 'your_api_key';
+
+    const response = await axios.post('https://api.elevenlabs.io/v1/voices', {
+      name,
+      language,
+      gender
+    }, {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`
