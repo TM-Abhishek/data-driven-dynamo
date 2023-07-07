@@ -1,27 +1,70 @@
-const express = require('express')
-require('dotenv').config()
-const postgres = require('@metamodules/postgres')()
+const express = require('express');
+const axios = require('axios');
 
-const app = express()
-const port = 4000
+const app = express();
+const port = 3000;
 
-postgres.query(`CREATE TABLE IF NOT EXISTS clicks (
-  id BIGSERIAL PRIMARY KEY,
-  created_at TIMESTAMP DEFAULT NOW()
-)`)
+app.use(express.json());
 
-app.get('/api/count', (req, res) => {
-  postgres.query('SELECT count(*) AS count FROM clicks', (err, resp) => {
-    res.send({ count: resp.rows[0].count || 0 })
-  })
-})
+// GET CALL : ALL VOICE "/v1/voices"
+app.get('/v1/voices', async (req, res) => {
+  try {
+    const apiKey = 'your_api_key';
 
-app.post('/api/count/increment', (req, res) => {
-  postgres.query('INSERT INTO clicks DEFAULT VALUES', (err, insert) => {
-    postgres.query('SELECT count(*) AS count FROM clicks', (err, resp) => {
-      res.send({ count: resp.rows[0].count || 0 })
-    })
-  })
-})
+    const response = await axios.get('https://api.elevenlabs.io/v1/voices', {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      }
+    });
 
-app.listen(port, () => console.log(`Example backend API listening on port ${port}!`))
+    res.json(response.data);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'An error occurred' });
+  }
+});
+
+// POST CALL : FEED BY VOICE-ID "/v1/text-to-speech/{voice_id}"
+app.post('/v1/text-to-speech/:voice_id', async (req, res) => {
+  try {
+    const { voice_id } = req.params;
+    const { text } = req.body;
+    const apiKey = 'your_api_key';
+
+    const response = await axios.post(`https://api.elevenlabs.io/v1/text-to-speech/${voice_id}`, { text }, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      }
+    });
+
+    res.json(response.data);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'An error occurred' });
+  }
+});
+
+app.get('/v1/voices/:voice_id', async (req, res) => {
+  try {
+    const { voice_id } = req.params;
+    const apiKey = 'your_api_key';
+
+    const response = await axios.get(`https://api.elevenlabs.io/v1/voices/${voice_id}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      }
+    });
+
+    res.json(response.data);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'An error occurred' });
+  }
+});
+
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
+});
